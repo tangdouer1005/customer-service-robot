@@ -47,6 +47,23 @@ END
 
 我想用rust实现，rust的模式匹配特性或许更方便实现这种格式
 
+程序框架设计如下
+
+````
+.
+├── Cargo.lock 								//记录依赖包元数据，cargo自动维护
+├── Cargo.toml								//cargo项目管理脚本，维护项目信息和依赖包
+├── README.md									//项目简介，也是实验过程记录
+├── src							//项目源码
+│   ├── command.rs						//DSL中的所有指令定义与操作
+│   ├── main.rs								//程序入口，处理用户输入和读取文件，程序逻辑实现
+│   ├── parse.rs							//解析用户脚本
+│   └── script.rs							//用户脚本
+└── tests						//测试
+    ├── integration_test.rs		//单元测试
+    └── unit_test.rs					//集成测试
+````
+
 
 
 ## 3.脚本范例编写
