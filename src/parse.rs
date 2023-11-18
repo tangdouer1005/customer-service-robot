@@ -4,10 +4,10 @@ use std::io::Read;
 use crate::script::Script;
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct ParseError{
     detail : String
 }
-
 impl ParseError{
     fn new(detail: String) -> ParseError{
         ParseError{detail}
@@ -25,10 +25,11 @@ pub fn script_parse(script_path: String) -> Result<Script, ParseError>{
 
     match file.read_to_string(& mut content) {
         Ok(__) => {
-            println!("read from {}, content: {}", script_path, content)
+            println!("read from {}, content: \n{}", script_path, content)
         }
         Err(err) => panic!("fail to read from {}, err: {}", script_path, err),    
     };
     
+
     Err(ParseError::new("todo".to_string()))
 }

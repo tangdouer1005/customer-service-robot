@@ -1,11 +1,13 @@
+use crate::command::Command;
+
 #[allow(dead_code)]
 pub struct Script{
-    commands: Vec<String>
+    commands: Vec<Command>
 }
 
 #[allow(dead_code)]
 impl Script{
-    pub fn new(commands: Vec<String>) -> Script{
+    pub fn new(commands: Vec<Command>) -> Script{
         Script { commands }
     }
 
