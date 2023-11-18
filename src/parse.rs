@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 
+use crate::command::Command;
 use crate::script::Script;
 
 #[allow(dead_code)]
@@ -30,6 +31,9 @@ pub fn script_parse(script_path: String) -> Result<Script, ParseError>{
         Err(err) => panic!("fail to read from {}, err: {}", script_path, err),    
     };
     
+    let commands : Vec<Command>;
+    
+
 
     Err(ParseError::new("todo".to_string()))
 }
