@@ -11,36 +11,37 @@
 
 ## 1. DSL语法定义
 
-客服机器人DSL将包含以下关键字：`BEGIN`, `END`, `MATCH`, `RESPONSE`和`UNKNOWN`. 此外，我们还会添加支持简单条件判断的`CASE`, `DEFAULT`关键字。这将使得我们的脚本具有更高的灵活度。
+客服机器人DSL将包含以下关键字：`STAET`, `END`, `MATCH`, `RESPONSE`和`UNKNOWN`. 此外，我们还会添加支持简单条件判断的`CASE`, `DEFAULT`关键字。这将使得我们的脚本具有更高的灵活度。
 
-- `BEGIN`和`END`用于定义一个块的开始和结束。
+- `STAET`和`END`用于定义一个块的开始和结束。
 - `MATCH`用于匹配用户输入的特定模式。
 - `RESPONSE`关键字后跟随机器人对匹配到的输入的响应。
 - `UNKNOWN`提供了在没有匹配到任何输入时的默认回复。
-- `CASE`和`DEFAULT`关键字用来组成一个判断结构，用于一个match之后，`CASE`后面跟随判断条件和对应的应答，`DEFAULT`后面跟随默认的应答，每个case之后可以通过begin和match的组合完成match的嵌套。
+- `CASE`和`DEFAULT`关键字用来组成一个判断结构，用于一个match之后，`CASE`后面跟随判断条件和对应的应答，`DEFAULT`后面跟随默认的应答，每个case之后可以通过STAET和match的组合完成match的嵌套。
 
 下面是一个脚本的示例：
 
 ```
-BEGIN
+STAET
   MATCH "我需要帮助"
   RESPONSE "当然，我很乐意帮助你。你遇到什么问题了呢？"
 
   MATCH "我的订单状态是什么"
   RESPONSE "让我为你查询。请你提供下订单号。"
 
-  CASE "我的订单号是12345"
-    BEGIN
-      MATCH "我想改变配送地址"
-      RESPONSE "好的，你想更改为哪个地址？"
-      CASE "我想改为100号大街"
-      RESPONSE "你的配送地址已经更改为100号大街。"
-      DEFAULT
-      RESPONSE "对不起，这个地址我们无法配送。"
-    END
+    CASE "我的订单号是12345"
+    RESPONSE "已查询到该订单号，请问需要什么服务"
+      STAET
+        MATCH "我想改变配送地址"
+        RESPONSE "好的，你想更改为哪个地址？"
+          CASE "我想改为100号大街"
+          RESPONSE "你的配送地址已经更改为100号大街。"
+          DEFAULT
+          RESPONSE "对不起，这个地址我们无法配送。"
+      END
 
-  DEFAULT
-  RESPONSE "对不起，我无法查询到你提供的订单信息，请检查订单号是否正确。"
+    DEFAULT
+    RESPONSE "对不起，我无法查询到你提供的订单信息，请检查订单号是否正确。"
 
   MATCH "我无法登录我的账户"
   RESPONSE "抱歉给您带来不便。你是否忘记了密码，或被告知你的账户被冻结了?"
