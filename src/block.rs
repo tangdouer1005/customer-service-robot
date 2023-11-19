@@ -22,7 +22,6 @@ pub struct CaseBlock {
 
 #[allow(dead_code)]
 pub struct UnknowingBlock {
-    unknowing: String,
     response: String,
 }
 // pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Option<Block>{
@@ -165,7 +164,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                 }
 
             }
-            Command::Unknown(unknowing_des) => {
+            Command::Unknown => {
                 match state {
                     Status::MATCHANSWER | Status::DEFAULTANSWER => {
                         state = Status::UNKNOWNANSWER;
@@ -176,7 +175,6 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                     return Err("repeated unknowing");
                 }
                 let unknow_block = UnknowingBlock {
-                    unknowing: unknowing_des,
                     response: String::new(),
                 };
                 unknowing = Some(unknow_block);
