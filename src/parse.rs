@@ -42,9 +42,9 @@ pub fn script_parse(script_path: String) -> Result<Script, ParseError>{
             panic!("fail to trans str to command, err : {}", msg);
         }
     };
-    for cmd in commands.clone().into_iter(){
-        print_command(cmd);
-    }
+    // for cmd in commands.clone().into_iter(){
+    //     print_command(cmd);
+    // }
 
     // let  blocks = match parse_commands_to_blocks(commands){
     //     Ok(m_blocks) => m_blocks,

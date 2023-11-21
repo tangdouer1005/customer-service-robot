@@ -1,10 +1,11 @@
-use crate::parse::script_parse;
-
 
 mod command;
 mod parse;
 mod script;
 mod block;
+use crate::parse::script_parse;
+
+
 
 fn main() {
     let script_path = "script.txt".to_string();

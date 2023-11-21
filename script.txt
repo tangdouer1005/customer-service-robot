@@ -1,4 +1,4 @@
-Start
+START
   MATCH "我需要帮助"
   RESPONSE "当然，我很乐意帮助你。你遇到什么问题了呢？"
 
@@ -6,7 +6,8 @@ Start
   RESPONSE "让我为你查询。请你提供下订单号。"
 
   CASE "我的订单号是12345"
-    Start
+  RESPONSE "已查询到该地址，请问需要什么服务？"
+    START
       MATCH "我想改变配送地址"
       RESPONSE "好的，你想更改为哪个地址？"
       CASE "我想改为100号大街"
