@@ -1,0 +1,26 @@
+START
+  MATCH "我需要帮助"
+
+  MATCH "我的订单状态是什么"
+  RESPONSE "让我为你查询。请你提供下订单号。"
+
+  CASE "我的订单号是12345"
+  RESPONSE "已查询到该地址，请问需要什么服务？"
+    START
+      MATCH "我想改变配送地址"
+      RESPONSE "好的，你想更改为哪个地址？"
+      CASE "我想改为100号大街"
+      RESPONSE "你的配送地址已经更改为100号大街。"
+      DEFAULT
+      RESPONSE "对不起，这个地址我们无法配送。"
+    END
+
+  DEFAULT
+  RESPONSE "对不起，我无法查询到你提供的订单信息，请检查订单号是否正确。"
+
+  MATCH "我无法登录我的账户"
+  RESPONSE "抱歉给您带来不便。你是否忘记了密码，或被告知你的账户被冻结了?"
+
+  UNKNOWN
+  RESPONSE "抱歉，我不明白你的问题。能否请你再详细描述一下？"
+END

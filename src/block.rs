@@ -52,19 +52,25 @@ enum Status{
     END
 }
 
+//将command向量转化为block
 pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'static str> {
+    // 主block的match向量
     let mut matches: Vec<MatchBlock> = Vec::new();
-
+    // 进入block子块时将原current_match入栈保存
     let mut matches_stack: Vec<MatchBlock> = Vec::new();
-
+    // 当前matchblock
     let mut current_match: Option<MatchBlock> = None;
+    // 当前caseblock
     let mut current_case: Option<CaseBlock> = None;
+    // 主块unknowblock
     let mut unknowing: Option<UnknowingBlock> = None;
+    // 当前状态
     let mut state = Status::INITIAL;
+    // 块嵌套层数
     let mut nest_level = 0;
 
     for command in commands {
-        print_command(command.clone());
+        //print_command(command.clone());
         match command {
             Command::START => {
                 match state{
@@ -72,6 +78,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                         state = Status::START;
                         nest_level += 1;
                     }
+                    // 在Status::CASEANSWER遇到Command::START，表明进入嵌套子块，将current_case放入current_match，将current_match入栈
                     Status::CASEANSWER =>{
                         match current_match{
                             Some(ref mut match_block) => {
@@ -79,10 +86,9 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                     Some(ref mut case_vec) => case_vec.push(current_case.unwrap().clone()),
                                     None => match_block.cases = Some(vec![current_case.unwrap().clone()]),
                                 }
-
                                 matches_stack.push(match_block.clone());
                             },
-                            None => panic!("Some(ref match_block) => matches_stack.push(match_block.clone()),")
+                            None => return Err("进入嵌套子块时current_match为空")
                         }
                         current_match = None;
                         current_case = None;
@@ -90,25 +96,22 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                         nest_level += 1;
                     }
                     __ => {
-                        panic!("bad status {:?}, {:?}", state, command);
-                        return Err("bad status {:?} try to trans to START");
+                        return Err("接收到Command::START时处于错误的状态");
                     }
                 }
             }
             Command::MATCH(mtch) => {
-
                 match state{
                     Status::START => state = Status::MATCH,
+                    // 接收到Command::MATCH时，如果处于子块则将match_block放入matches_stack的栈顶match，若处于主块中则放入matches
                     Status::MATCHANSWER | Status::DEFAULTANSWER => {
                         state = Status::MATCH;
                         if nest_level > 1{
-                            println!("{:?}", matches_stack);
                             let mut last_stack = matches_stack.pop();
                             match last_stack{
                                 Some(ref mut match_block) => {
                                     match match_block.cases{
                                         Some(ref mut case_vec) =>{
-                                            println!("{:?}", case_vec);
                                             let mut last_case = case_vec.pop().unwrap();
                                             match last_case.matches{
                                                 Some(ref mut match_vec) =>{
@@ -121,10 +124,10 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                             current_match= None;
                                             case_vec.push(last_case);
                                         }
-                                        None => panic!()
+                                        None => return Err("接受Command::MATCH处于子块,栈顶matchblock不存在cases成员")
                                     }
                                 }
-                                None => panic!("")
+                                None => return Err("接受Command::MATCH处于子块,栈顶matchblock不存在")
                             }
                             matches_stack.push(last_stack.unwrap());
                         }else if nest_level == 1{
@@ -132,13 +135,13 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                 Some(ref match_block) => {
                                     matches.push(match_block.clone())
                                 }
-                                None => ()
+                                None => return Err("接受Command::MATCH处于主块,current_match不存在")
                             }
                         }
                     }
-                    __ => return Err("bad status try to trans to MATCH")
+                    __ => return Err("接受Command::MATCH处于错误的状态")
                 }
-                
+                //初始化current_match
                 current_match = Some(MatchBlock {
                     mtch,
                     response: String::new(),
@@ -149,6 +152,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
             Command::CASE(case) => {
                 match state{
                     Status::MATCHANSWER => state = Status::CASE,
+                    // 将上一个caseblock放入current_case
                     Status::CASEANSWER => {
                         state = Status::CASE;
                         match current_case{
@@ -160,16 +164,17 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                             None => m_match.cases = Some(vec![case_block.clone()])
                                         }
                                     }
-                                    None => panic!("current_match is None")
+                                    None => return Err("接收Command::CASE处于Status::CASEANSWER, current_match为空")
                                 }
                             }
-                            None => panic!("current_case is None")
+                            None => return Err("接收Command::CASE处于Status::CASEANSWER, current_case为空")
                         }
                         current_case = None;
                         
                     } 
                     __ => return Err("bad status try to trans to CASE")
                 }
+                // 初始化current_case
                 current_case = Some(CaseBlock {
                     case,
                     response: String::new(),
@@ -177,11 +182,13 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                 })
             }
             Command::RESPONSE(response) => {
+                // 接收到RESPONSE根据状态补充对应的RESPONSE
                 match state {
                     Status::MATCH => {
                         state = Status::MATCHANSWER;
-                        if let Some(match_block) = &mut current_match {
-                            match_block.response = response;
+                        match current_match{
+                            Some(ref mut match_block) => match_block.response = response,
+                            None => return Err("接收到Command::RESPONSE处于Status::MATCH,current_match为空")
                         }
                     }
                     Status::CASE => {
@@ -190,39 +197,36 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                             Some(ref mut case_block) =>{
                                 case_block.response = response;
                             }
-                            None => panic!("current_case is None")
+                            None => return Err("接收到Command::RESPONSE处于Status::CASE,current_case为空")
                         }
-                        //current_case = None;
                     }
                     Status::DEFAULT => {
                         state = Status::DEFAULTANSWER;
                         match current_match{
                             Some(ref mut match_block) => match_block.default = Some(response),
-                            None => panic!("match_block.default = Some(response);")
+                            None => return Err("接收到Command::RESPONSE处于Status::DEFAULT,current_match为空")
                         }
                     }
                     Status::UNKNOWN => {
                         state = Status::UNKNOWNANSWER;
                         match unknowing{
                             Some(ref mut unknow_block) => unknow_block.response = response,
-                            None => panic!("answer to no noknowing")
+                            None => return Err("接收到Command::RESPONSE处于Status::UNKNOWN,unknowing为空")
                         }
                     }
                     __ => {
-                        println!("answer state wrong : {:?}", state);
-                        return Err("answer state wrong");
+                        return Err("接收到Command::RESPONSE处于错误的状态");
                     }
                 }
             }
+            // 接收Command::END处于主块直接返回，处于子块matches_stack栈顶元素cases添加current_match
             Command::END => {
-                
                 if nest_level == 1{
                     match state {
                         Status::MATCHANSWER | Status::UNKNOWNANSWER => {
                             if matches.is_empty() || unknowing.is_none(){
                                 return Err("Invalid command sequence");
                             }
-                        
                             let block = Block {
                                 matches:matches.iter_mut().map(|ref mut x| x.clone()).collect(),
                                 unknowing:unknowing.unwrap()
@@ -230,7 +234,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                         
                             return Ok(block)
                         }
-                        __ => return Err("nest_level == 1, end state wrong")
+                        __ => return Err("主块中接收到Command::END处于错误状态")
                     }
                 }else if nest_level > 1{
                     match state {
@@ -255,12 +259,13 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                             nest_level -= 1;
                             state = Status::CASEANSWER;
                         }
-                        __ => return Err("nest_level > 1, end state wrong")
+                        __ => return Err("子块中接收到Command::END处于错误状态")
                     }
                 }else{
-                    return Err("nest_level < 1, end state wrong");
+                    return Err("nest_level错误");
                 }
             }
+            // 接收Command::UNKNOWN
             Command::UNKNOWN => {
                 match state {
                     Status::MATCHANSWER | Status::DEFAULTANSWER => {
@@ -281,6 +286,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                 };
                 unknowing = Some(unknow_block);
             }
+            //接收Command::DEFAULT命令
             Command::DEFAULT => {
                 match state{
                     Status::CASEANSWER =>{
@@ -306,7 +312,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
             }
         }
     }
-    Err("Unexpected Default command")
+    Err("未正常退出parse_commands_to_blocks")
 }
 #[test]
 fn test_parse_commands_to_blocks() {
@@ -318,63 +324,20 @@ fn test_parse_commands_to_blocks() {
         Ok(block) => block,
         Err(error) => panic!("error: {}", error)
     };
-    //println!("看看这里{:?}", m_block.clone());
     let m_str = format!("{:?}", m_block.clone());
     let answer_str = r#"Block { matches: [MatchBlock { mtch: "我需要帮助", response: "当然，我很乐意帮助你。你遇到什么问题了呢？", cases: None, default: None }, MatchBlock { mtch: "我的订单状态是什么", response: "让我为你查询。请你提供下订单号。", cases: Some([CaseBlock { case: "我的订单号是12345", response: "已查询到该地址，请问需要什么服务？", matches: Some([MatchBlock { mtch: "我想改变配送地址", response: "好的，你想更改为哪个地址？", cases: Some([CaseBlock { case: "我想改为100号大街", response: "你的配送地址已经更改为100号大街。", matches: None }]), default: Some("对不起，这个地址我们无法配送。") }]) }]), default: Some("对不起，我无法查询到你提供的订单信息，请检查订单号是否正确。") }, MatchBlock { mtch: "我无法登录我的账户", response: "抱歉给您带来不便。你是否忘记了密码，或被告知你的账户被冻结了?", cases: None, default: None }], unknowing: UnknowingBlock { response: "抱歉，我不明白你的问题。能否请你再详细描述一下？" } }"#;
     assert_eq!(m_str, answer_str);
-    // let unknow_block = UnknowingBlock{
-    //     response: "抱歉，我不明白你的问题。能否请你再详细描述一下？".to_string()
-    // };
-    
-    // let case_block_0 = CaseBlock{
-    //     case: "我的订单号是12345".to_string(),
-    //     response: "已查询到该地址，请问需要什么服务？".to_string(),
-    //     matches: None,
-    // };
-    // let case_block_1 = CaseBlock{
-    //     case: "我的订单号是54321".to_string(),
-    //     response: "为查询到该订单号".to_string(),
-    //     matches: None,
-    // };
-    // let match_block = MatchBlock{
-    //     mtch: "我的订单状态是什么".to_string(),
-    //     response: "让我为你查询。请你提供下订单号。".to_string(),
-    //     cases: Some(vec![case_block_0, case_block_1]),
-    //     default: Some("该地址无法配送".to_string()),
-    // };
-    // let block = Block{
-    //     matches: vec![match_block],
-    //     unknowing: unknow_block,
-    // };
-
 }
 
-
-// #[test]
-// fn test_print_block() {
-//     let unknow_block = UnknowingBlock{
-//         response: "抱歉，我不明白你的问题。能否请你再详细描述一下？".to_string()};
-    
-//     let case_block_0 = CaseBlock{
-//         case: "我的订单号是12345".to_string(),
-//         response: "已查询到该地址，请问需要什么服务？".to_string(),
-//         matches: None,
-//     };
-//     let case_block_1 = CaseBlock{
-//         case: "我的订单号是54321".to_string(),
-//         response: "为查询到该订单号".to_string(),
-//         matches: None,
-//     };
-//     let match_block = MatchBlock{
-//         mtch: "我的订单状态是什么".to_string(),
-//         response: "让我为你查询。请你提供下订单号。".to_string(),
-//         cases: Some(vec![case_block_0, case_block_1]),
-//         default: Some("该地址无法配送".to_string()),
-//     };
-//     let block = Block{
-//         matches: vec![match_block],
-//         unknowing: unknow_block,
-//     };
-//     println!("看看这里{:?}", block.clone());
-//     assert_eq!(1, 2);
-// }
+#[test]
+#[should_panic (expected = "error: 接受Command::MATCH处于错误的状态")]
+fn test_bad_parse_commands_to_blocks() {
+    let cmd_vec = match parse_file_to_cmds("bad_script.txt") {
+        Ok(vec) => vec,
+        Err(error) => panic!("error: {}", error),
+    };
+    let m_block = match parse_commands_to_blocks(cmd_vec) {
+        Ok(block) => block,
+        Err(error) => panic!("error: {}", error)
+    };
+}

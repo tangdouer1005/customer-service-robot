@@ -13,17 +13,18 @@ pub enum Command {
     DEFAULT,
     END,
 }
-
-pub fn parse_line_to_cmd(line: &str) -> Option<Command> {
+// 将一行字符串转化为Command枚举类型 
+fn parse_line_to_cmd(line: &str) -> Option<Command> {
     let line = line.trim();
     if line.is_empty() {
         return None;
     }
-    
-    let re = Regex::new(r#"(\w+)\s*(".*")?"#).unwrap();
 
+    // 使用正则表达式对传入脚本行进行匹配
+    let re = Regex::new(r#"(\w+)\s*(".*")?"#).unwrap();
     let cap = re.captures(line)?;
 
+    // 模式匹配，第一块为脚本命令，第二块为脚本信息
     let cmd = match cap.get(1)?.as_str() {
         "START" => Command::START,
         "MATCH" => Command::MATCH(cap.get(2)?.as_str().trim_matches('"').to_string()),
@@ -33,18 +34,30 @@ pub fn parse_line_to_cmd(line: &str) -> Option<Command> {
         "UNKNOWN" => Command::UNKNOWN,
         "END" => Command::END,
         _ => {
-            panic!("bad command 请检查你的脚本语法 {}", line)
+            panic!("bad command {}", line)
         },
     };
 
     Some(cmd)
 }
 
+// 打印Command
+pub fn print_command(ref cmd : Command){
+    match cmd{
+        Command::START => println!("STAET"),
+        Command::MATCH(msg) => println!("MATCH: {}", msg),
+        Command::RESPONSE(msg)=> println!("RESPONSE: {}", msg),
+        Command::UNKNOWN => println!("UNKNOWN"),
+        Command::CASE(msg)=> println!("CASE: {}", msg),
+        Command::DEFAULT=> println!("DEFAULT"),
+        Command::END=> println!("END"),
+    }
+}
+
+// 打开脚本将脚本中的自然语言转化为Command向量
 pub fn parse_file_to_cmds(filename: &str) -> io::Result<Vec<Command>> {
     let file = File::open(filename)?;
     let reader = io::BufReader::new(file);
-
-    //这里可以进行一个脚本的语法检验
 
     let mut commands: Vec<Command> = vec![];
     for line in reader.lines() {
@@ -58,17 +71,6 @@ pub fn parse_file_to_cmds(filename: &str) -> io::Result<Vec<Command>> {
     Ok(commands)
 }
 
-pub fn print_command(ref cmd : Command){
-    match cmd{
-        Command::START => println!("STAET"),
-        Command::MATCH(msg) => println!("MATCH: {}", msg),
-        Command::RESPONSE(msg)=> println!("RESPONSE: {}", msg),
-        Command::UNKNOWN => println!("UNKNOWN"),
-        Command::CASE(msg)=> println!("CASE: {}", msg),
-        Command::DEFAULT=> println!("DEFAULT"),
-        Command::END=> println!("END"),
-    }
-}
 
 #[test]
 fn test_parse_line_to_cmd() {
@@ -83,23 +85,21 @@ fn test_parse_line_to_cmd() {
     assert_eq!(parse_line_to_cmd("CASE"), None);
 }
 
+// 测试脚本中未定义的命令
 #[test]
 #[should_panic]
 fn test_bad_parse_line_to_cmd() {
     assert_eq!(parse_line_to_cmd("BADSTART"), Some(Command::START));
 }
 
+// 测试从script.txt中读取脚本为command
 #[test]
 fn test_parse_file_to_cmds() {
     let command_vec = match parse_file_to_cmds("script.txt"){
         Ok(vec) => vec,
         Err(error) => panic!("bad vec {}", error)
     };
-    // for i in command_vec.iter(){
-    //     print_command(i.clone());
-    // }
     assert_eq!(command_vec.len(), 22);
-
     assert_eq!(command_vec[0], Command::START);
     assert_eq!(command_vec[3], Command::MATCH("我的订单状态是什么".to_string()));
     assert_eq!(command_vec[11], Command::RESPONSE("你的配送地址已经更改为100号大街。".to_string()));
@@ -107,6 +107,7 @@ fn test_parse_file_to_cmds() {
     assert_eq!(command_vec[21], Command::END);
 }
 
+// 测试读取不存在的脚本
 #[test]
 #[should_panic]
 fn test_bad_parse_file_to_cmds() {

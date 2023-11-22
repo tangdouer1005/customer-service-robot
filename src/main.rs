@@ -1,17 +1,17 @@
-
 mod command;
 mod script;
 mod block;
 use block::parse_commands_to_blocks;
 use command::parse_file_to_cmds;
 use script::execute;
-use std::io::{self, BufRead};
+use std::io::{self};
 
 fn main() {
     let mut script_path = String::new();
-    println!("请输入你的脚本名：");
-    io::stdin().read_line(&mut script_path);
+    println!("请输入你的脚本路径：");
+    let _ = io::stdin().read_line(&mut script_path);
 
+    // 将脚本中的自然语言转化为command向量
     let commands = match parse_file_to_cmds(script_path.trim()){
         Ok(commands) => commands,
         Err(msg) => {
@@ -19,12 +19,13 @@ fn main() {
         }
     };
 
-    let  blocks = match parse_commands_to_blocks(commands){
-        Ok(m_blocks) => m_blocks,
+    // 将command向量转化为block结构体
+    let  block = match parse_commands_to_blocks(commands){
+        Ok(block) => block,
         Err(msg) => panic!("fail to trans command to blocks, err : {}", msg),
     };
-    println!("{:?}", blocks);
 
-    execute(blocks);
-    
+    // 根据block结构体运行脚本
+    execute(block);
+
 }

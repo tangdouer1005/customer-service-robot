@@ -3,17 +3,17 @@ use regex::RegexBuilder;
 use std::io::{self, BufRead};
 use crate::block::Block;
 use crate::block::MatchBlock;
-use crate::block::UnknowingBlock;
 use crate::block::CaseBlock;
 
+ // 判断给定字符串是否符合正则表达式
 fn str_match(str1: &str, reg: &str) -> bool{
     let re = RegexBuilder::new(reg.trim()).unicode(true)
     .build()
     .unwrap();
-    
     println!("{} {} {}", str1.trim(), reg.trim(), re.is_match(str1.trim()));
     re.is_match(str1.trim())
 }
+// 传入脚本对应的Block，运行脚本
 pub fn execute(m_block :Block){
     let Block {
         matches,
@@ -80,4 +80,11 @@ pub fn execute(m_block :Block){
         current_case = None;
         continue 'outer;
     }
+}
+// 测试str_match
+#[test]
+fn test_str_match() {
+    assert!(str_match("测试一下吧", ".*测试.*"));
+    assert!(!str_match("一下吧", ".*测试.*"));
+    assert!(str_match("测啥都行", ".*"));
 }
