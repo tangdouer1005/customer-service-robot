@@ -1,0 +1,42 @@
+START
+  MATCH "我这里有些问题"
+  RESPONSE "您有什么问题呢"
+
+  MATCH "我买的衣服大了一号"
+  RESPONSE "请问您有没有撕牌？"
+
+  CASE "还没撕"
+  RESPONSE "那衣服有没有破损呢？"
+    START
+      MATCH "没有破损"
+      RESPONSE "那可以退换货，请问您想要大一码的还是想直接退货呢？"
+
+        CASE "直接退货"
+        RESPONSE "好的，等我们收到衣服，钱将原路返回"
+
+        CASE "换一个大的"
+        RESPONSE "好的，请问款式和收货地址还是原来的吗？"
+            START
+                MATCH "对的，不变"
+                RESPONSE "好的，您已提交换货申请"
+            END
+
+        DEFAULT
+        RESPONSE "对不起，这个地址我们无法配送。"
+
+      MATCH "让我弄破了一点"
+      RESPONSE "弄破了就不能退换货了"
+    END
+
+  CASE "已经撕了"
+  RESPONSE "那您不可以退了哦"
+
+DEFAULT
+RESPONSE "听不懂您在讲什么"
+
+  MATCH "你们的衣服质量有问题"
+  RESPONSE "没啥问题"
+
+  UNKNOWN
+  RESPONSE "抱歉，我不明白你的问题。能否请你再详细描述一下？"
+END

@@ -6,27 +6,27 @@ use crate::command::print_command;
 #[derive(Clone)]
 #[derive(PartialEq)]
 pub struct Block {
-    matches: Vec<MatchBlock>,
-    unknowing: UnknowingBlock,
+    pub matches: Vec<MatchBlock>,
+    pub unknowing: UnknowingBlock,
 }
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(PartialEq)]
 pub struct MatchBlock {
-    mtch: String,
-    response: String,
-    cases: Option<Vec<CaseBlock>>,
-    default: Option<String>,
+    pub mtch: String,
+    pub response: String,
+    pub cases: Option<Vec<CaseBlock>>,
+    pub default: Option<String>,
 }
 #[allow(dead_code)]
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct CaseBlock {
-    case: String,
-    response: String,
-    matches: Option<Vec<MatchBlock>>,
+    pub case: String,
+    pub response: String,
+    pub matches: Option<Vec<MatchBlock>>,
 }
 
 #[allow(dead_code)]
@@ -34,7 +34,7 @@ pub struct CaseBlock {
 #[derive(Clone)]
 #[derive(PartialEq)]
 pub struct UnknowingBlock {
-    response: String,
+    pub response: String,
 }
 #[derive(Debug)]
 #[derive(Clone, Copy)]
@@ -225,9 +225,6 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                 Some(match_block) => match_block,
                                 None => panic!("Some(match_block) => match_block,")
                             };
-                            // if let Some(ref last) = tem_match.clone().cases.unwrap().last().cloned(){
-                            //     current_case = Some(last.clone());
-                            // };
                             let mut clone_case_vec = tem_match.clone().cases.unwrap();
                             current_case = clone_case_vec.pop();
                             tem_match.cases = Some(clone_case_vec);
@@ -237,9 +234,6 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                     Some(ref mut match_vec) => match_vec.push(current_match.unwrap()),
                                     None => case_block.matches = Some(vec![current_match.unwrap()])
                                 }
-                                // if let Some(ref mut vec_match) = c{
-                                //     vec_match.push(current_match.unwrap());
-                                // }
 
                             }
                             //current_case.unwrap().matches.unwrap().push(current_match.unwrap());
