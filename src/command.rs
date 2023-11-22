@@ -95,7 +95,7 @@ fn test_bad_parse_line_to_cmd() {
 // 测试从script.txt中读取脚本为command
 #[test]
 fn test_parse_file_to_cmds() {
-    let command_vec = match parse_file_to_cmds("script.txt"){
+    let command_vec = match parse_file_to_cmds("scripts/script.txt"){
         Ok(vec) => vec,
         Err(error) => panic!("bad vec {}", error)
     };
@@ -111,7 +111,7 @@ fn test_parse_file_to_cmds() {
 #[test]
 #[should_panic]
 fn test_bad_parse_file_to_cmds() {
-    match parse_file_to_cmds("noscript.txt"){
+    match parse_file_to_cmds("scripts/noscript.txt"){
         Ok(vec) => vec,
         Err(error) => panic!("bad vec {}", error)
     };

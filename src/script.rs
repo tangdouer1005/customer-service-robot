@@ -10,7 +10,6 @@ fn str_match(str1: &str, reg: &str) -> bool{
     let re = RegexBuilder::new(reg.trim()).unicode(true)
     .build()
     .unwrap();
-    println!("{} {} {}", str1.trim(), reg.trim(), re.is_match(str1.trim()));
     re.is_match(str1.trim())
 }
 // 传入脚本对应的Block，运行脚本

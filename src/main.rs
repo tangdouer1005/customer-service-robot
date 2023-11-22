@@ -11,6 +11,7 @@ fn main() {
     println!("请输入你的脚本路径：");
     let _ = io::stdin().read_line(&mut script_path);
 
+
     // 将脚本中的自然语言转化为command向量
     let commands = match parse_file_to_cmds(script_path.trim()){
         Ok(commands) => commands,
@@ -24,6 +25,7 @@ fn main() {
         Ok(block) => block,
         Err(msg) => panic!("fail to trans command to blocks, err : {}", msg),
     };
+    println!("脚本编译完毕，运行脚本成功");
 
     // 根据block结构体运行脚本
     execute(block);

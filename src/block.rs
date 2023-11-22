@@ -316,7 +316,7 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
 }
 #[test]
 fn test_parse_commands_to_blocks() {
-    let cmd_vec = match parse_file_to_cmds("script.txt") {
+    let cmd_vec = match parse_file_to_cmds("scripts/script.txt") {
         Ok(vec) => vec,
         Err(error) => panic!("error: {}", error),
     };
@@ -332,7 +332,7 @@ fn test_parse_commands_to_blocks() {
 #[test]
 #[should_panic (expected = "error: 接受Command::MATCH处于错误的状态")]
 fn test_bad_parse_commands_to_blocks() {
-    let cmd_vec = match parse_file_to_cmds("bad_script.txt") {
+    let cmd_vec = match parse_file_to_cmds("scripts/bad_script.txt") {
         Ok(vec) => vec,
         Err(error) => panic!("error: {}", error),
     };
