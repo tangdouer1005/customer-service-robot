@@ -63,12 +63,8 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
     let mut state = Status::INITIAL;
     let mut nest_level = 0;
 
-    // for i in commands.iter(){
-    //     print_command(i.clone());
-    // }
     for command in commands {
         print_command(command.clone());
-        //println!("{:?}", command);
         match command {
             Command::START => {
                 match state{
@@ -79,9 +75,6 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                     Status::CASEANSWER =>{
                         match current_match{
                             Some(ref mut match_block) => {
-                                // if let Some(ref mut case_vec) = match_block.cases{
-                                //     case_vec.push(current_case.unwrap().clone());
-                                // }
                                 match match_block.cases{
                                     Some(ref mut case_vec) => case_vec.push(current_case.unwrap().clone()),
                                     None => match_block.cases = Some(vec![current_case.unwrap().clone()]),
@@ -106,16 +99,46 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
 
                 match state{
                     Status::START => state = Status::MATCH,
-                    Status::MATCHANSWER => state = Status::MATCH,
-                    Status::DEFAULTANSWER => state = Status::MATCH,
+                    Status::MATCHANSWER | Status::DEFAULTANSWER => {
+                        state = Status::MATCH;
+                        if nest_level > 1{
+                            println!("{:?}", matches_stack);
+                            let mut last_stack = matches_stack.pop();
+                            match last_stack{
+                                Some(ref mut match_block) => {
+                                    match match_block.cases{
+                                        Some(ref mut case_vec) =>{
+                                            println!("{:?}", case_vec);
+                                            let mut last_case = case_vec.pop().unwrap();
+                                            match last_case.matches{
+                                                Some(ref mut match_vec) =>{
+                                                    match_vec.push(current_match.unwrap());
+                                                }
+                                                None => {
+                                                    last_case.matches = Some(vec![current_match.unwrap()]);
+                                                }
+                                            }
+                                            current_match= None;
+                                            case_vec.push(last_case);
+                                        }
+                                        None => panic!()
+                                    }
+                                }
+                                None => panic!("")
+                            }
+                            matches_stack.push(last_stack.unwrap());
+                        }else if nest_level == 1{
+                            match current_match{
+                                Some(ref match_block) => {
+                                    matches.push(match_block.clone())
+                                }
+                                None => ()
+                            }
+                        }
+                    }
                     __ => return Err("bad status try to trans to MATCH")
                 }
-                match current_match{
-                    Some(ref match_block) => {
-                        matches.push(match_block.clone())
-                    }
-                    None => ()
-                }
+                
                 current_match = Some(MatchBlock {
                     mtch,
                     response: String::new(),
@@ -166,15 +189,6 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                         match current_case{
                             Some(ref mut case_block) =>{
                                 case_block.response = response;
-                                // match current_match{
-                                //     Some(ref mut m_match) => {
-                                //         match m_match.cases{
-                                //             Some(ref mut vec) => vec.push(case_block.clone()),
-                                //             None => m_match.cases = Some(vec![case_block.clone()])
-                                //         }
-                                //     }
-                                //     None => panic!("current_match is None")
-                                // }
                             }
                             None => panic!("current_case is None")
                         }
@@ -236,7 +250,6 @@ pub fn parse_commands_to_blocks(commands: Vec<Command>) -> Result<Block, &'stati
                                 }
 
                             }
-                            //current_case.unwrap().matches.unwrap().push(current_match.unwrap());
                             current_match = Some(tem_match);
                             
                             nest_level -= 1;

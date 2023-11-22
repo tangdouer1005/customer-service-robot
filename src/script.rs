@@ -1,13 +1,18 @@
 
-use regex::Regex;
+use regex::RegexBuilder;
 use std::io::{self, BufRead};
 use crate::block::Block;
 use crate::block::MatchBlock;
 use crate::block::UnknowingBlock;
 use crate::block::CaseBlock;
 
-fn str_match(str1: &str, str2: &str) -> bool{
-    str1.trim() == str2.trim()
+fn str_match(str1: &str, reg: &str) -> bool{
+    let re = RegexBuilder::new(reg.trim()).unicode(true)
+    .build()
+    .unwrap();
+    
+    println!("{} {} {}", str1.trim(), reg.trim(), re.is_match(str1.trim()));
+    re.is_match(str1.trim())
 }
 pub fn execute(m_block :Block){
     let Block {
@@ -63,7 +68,7 @@ pub fn execute(m_block :Block){
             }
         }
         for match_block in matches.iter(){
-            if str_match(match_block.mtch.as_str(), line.as_str()){
+            if str_match(line.as_str(), match_block.mtch.as_str()){
                 println!("{}", match_block.response);
                 current_match = Some(match_block.to_owned());
                 current_case = None;

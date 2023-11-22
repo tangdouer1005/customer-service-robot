@@ -5,10 +5,14 @@ mod block;
 use block::parse_commands_to_blocks;
 use command::parse_file_to_cmds;
 use script::execute;
+use std::io::{self, BufRead};
 
 fn main() {
-    let script_path = "script_1.txt";
-    let commands = match parse_file_to_cmds(script_path){
+    let mut script_path = String::new();
+    println!("请输入你的脚本名：");
+    io::stdin().read_line(&mut script_path);
+
+    let commands = match parse_file_to_cmds(script_path.trim()){
         Ok(commands) => commands,
         Err(msg) => {
             panic!("fail to trans str to command, err : {}", msg);
