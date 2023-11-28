@@ -1,0 +1,7 @@
+"filename", "language", "Rust", "Markdown", "comment", "blank", "total"
+"/Users/tangjiahui/Code/customer-service-robot/README.md", "Markdown", 0, 418, 0, 95, 513
+"/Users/tangjiahui/Code/customer-service-robot/src/block.rs", "Rust", 316, 0, 18, 10, 344
+"/Users/tangjiahui/Code/customer-service-robot/src/command.rs", "Rust", 97, 0, 8, 13, 118
+"/Users/tangjiahui/Code/customer-service-robot/src/main.rs", "Rust", 24, 0, 3, 7, 34
+"/Users/tangjiahui/Code/customer-service-robot/src/script.rs", "Rust", 84, 0, 3, 2, 89
+"Total", "-", 521, 418, 32, 127, 1098

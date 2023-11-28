@@ -9,6 +9,15 @@
 3. 编写几个脚本范例：根据不同的应答逻辑，编写几个脚本范例，包括不同的场景和交互情境。这些脚本范例应包含DSL语言的语法和语义的示例，以便测试和演示解释器的行为表现。
 4. 测试和演示：用编写的脚本范例测试解释器的功能和正确性。检查解释器是否能正确解析和执行DSL语言的脚本，并根据逻辑要求给出正确的应答。可以使用命令行界面或其他形式的输入输出进行测试和演示。
 
+## 0. 用户使用手册
+
+```
+$ cargo build	 #项目构建
+$ cargo run		 #项目运行
+$ cargo clean	 #清除缓存与编译文件
+$ cargo test	 #项目测试
+```
+
 ## 1. DSL语法定义
 
 客服机器人DSL将包含以下关键字：`STAET`, `END`, `MATCH`, `RESPONSE`和`UNKNOWN`. 此外，我们还会添加支持简单条件判断的`CASE`, `DEFAULT`关键字，并支持和`MATCH`的组合完成`MATCH`的嵌套。。这将使得我们的脚本具有更高的灵活度。
@@ -68,12 +77,12 @@ END
 ├── Cargo.lock 								//记录依赖包元数据，cargo自动维护
 ├── Cargo.toml								//cargo项目管理脚本，维护项目信息和依赖包
 ├── README.md									//项目简介，也是实验过程记录
-├── scripts							//项目源码
+├── scripts					//脚本样例		
 │   ├── bad_script.txt
 │   ├── script.txt
 │   ├── script_1.txt
 │   └── script_regex.txt
-└── src
+└── src							//项目源码
     ├── block.rs							//block结构的定义与转化
     ├── command.rs						//command枚举变量的定义与转化
     ├── main.rs								//程序入口，处理用户输入和读取文件，程序逻辑实现
@@ -132,6 +141,8 @@ pub fn parse_file_to_cmds(filename: &str) -> io::Result<Vec<Command>>
 ### 模块二：将command向量转化为block
 
 block结构体的定义
+
+![image-20231127110337197](https://raw.githubusercontent.com/tangdouer1005/tangdourercdn/main/mac/202311271103265.png)
 
 ````rust
 //主块定义，包含一个MatchBlock向量和一个UnknowingBlock
@@ -238,6 +249,18 @@ Block {
 ### 模块三：通过block运行脚本
 
 current_match记录上次匹配到的match块，current_case记录上次匹配到的case块，str_match通过正则表达式规则进行正则匹配
+
+通过current_case和current_match两个变量是否为空，可隐式的将状态根据上次match结果分为
+
+1. match状态
+2. case状态
+3. 空状态
+
+match状态表明上次匹配匹配到了match块，此状态只能匹配current_match下的case，若匹配失败则默认匹配current_match下的default
+
+case状态表明上次匹配到case块，此状态只能匹配current_case状态下的matches，若匹配失败则进入unknow块
+
+空状态表明上次匹配失败，或者刚进入程序，只能匹配主块的matches
 
 ````rust
 // 判断给定字符串是否符合正则表达式
@@ -437,7 +460,44 @@ END
 
 ![image-20231123000551385](https://raw.githubusercontent.com/tangdouer1005/tangdourercdn/main/mac/202311230005431.png)
 
-总共存在七个测试，各自位于所属的单元下
+rust有很好的测试系统，可以将测试模块集成到源码中，总共存在七个测试，各自位于所属的单元下
+
+例如test_parse_commands_to_blocks和test_bad_parse_commands_to_blocks
+
+````rust
+#[test]
+fn test_parse_commands_to_blocks() {
+    let cmd_vec = match parse_file_to_cmds("scripts/script.txt") {
+        Ok(vec) => vec,
+        Err(error) => panic!("error: {}", error),
+    };
+    let m_block = match parse_commands_to_blocks(cmd_vec) {
+        Ok(block) => block,
+        Err(error) => panic!("error: {}", error)
+    };
+    let m_str = format!("{:?}", m_block.clone());
+    let answer_str = r#"Block { matches: [MatchBlock { mtch: "我需要帮助", response: "当然，我很乐意帮助你。你遇到什么问题了呢？", cases: None, default: None }, MatchBlock { mtch: "我的订单状态是什么", response: "让我为你查询。请你提供下订单号。", cases: Some([CaseBlock { case: "我的订单号是12345", response: "已查询到该地址，请问需要什么服务？", matches: Some([MatchBlock { mtch: "我想改变配送地址", response: "好的，你想更改为哪个地址？", cases: Some([CaseBlock { case: "我想改为100号大街", response: "你的配送地址已经更改为100号大街。", matches: None }]), default: Some("对不起，这个地址我们无法配送。") }]) }]), default: Some("对不起，我无法查询到你提供的订单信息，请检查订单号是否正确。") }, MatchBlock { mtch: "我无法登录我的账户", response: "抱歉给您带来不便。你是否忘记了密码，或被告知你的账户被冻结了?", cases: None, default: None }], unknowing: UnknowingBlock { response: "抱歉，我不明白你的问题。能否请你再详细描述一下？" } }"#;
+    assert_eq!(m_str, answer_str);
+}
+````
+
+````rust
+#[test]
+#[should_panic (expected = "error: 接受Command::MATCH处于错误的状态")]
+fn test_bad_parse_commands_to_blocks() {
+    let cmd_vec = match parse_file_to_cmds("scripts/bad_script.txt") {
+        Ok(vec) => vec,
+        Err(error) => panic!("error: {}", error),
+    };
+    let m_block = match parse_commands_to_blocks(cmd_vec) {
+        Ok(block) => block,
+        Err(error) => panic!("error: {}", error)
+    };
+}
+
+````
+
+分别测试parse_commands_to_blocks可以将commands正确转化为blocks，接收到不合法的commands后会抛出错误
 
 ### 5. 脚本测试
 

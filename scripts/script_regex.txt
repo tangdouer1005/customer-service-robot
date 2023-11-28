@@ -5,11 +5,11 @@ START
   MATCH ".*尺码.*"
   RESPONSE "请您说您的尺码，我给您推荐型号"
 
-  CASE ".*180m140kg.*"
-  RESPONSE "XL🐎"
+    CASE ".*180m140kg.*"
+    RESPONSE "XL🐎"
 
-  DEFAULT
-  RESPONSE "对不起我也不知道你该穿多大的"
+    DEFAULT
+    RESPONSE "对不起我也不知道你该穿多大的"
 
   MATCH ".*无法登录.*"
   RESPONSE "抱歉给您带来不便。你是否忘记了密码，或被告知你的账户被冻结了?"
